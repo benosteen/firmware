@@ -26,7 +26,8 @@ int main(int argc, char *argv[])
 {
 
 /* could change this to read in argv[1] if present for device name */
-pcm_name = strdup("hw:0.0");  */
+pcm_name = strdup("plughw:0,0");
+
 
 /* Allocate the snd_pcm_hw_params_t structure on the stack. */
 snd_pcm_hw_params_alloca(&hwparams);
@@ -117,7 +118,7 @@ int frames;
 
 data = (unsigned char *)malloc(periodsize);
 frames = periodsize >> 2;
-for(l1 = 0; l1 < 100; l1++) {
+for(l1 = 0; l1 < 1000; l1++) {
   for(l2 = 0; l2 < frames; l2++) {
     s1 = (l2 % 128) * 100 - 5000;  
     s2 = (l2 % 256) * 100 - 5000;  
