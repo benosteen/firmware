@@ -354,6 +354,7 @@ GLboolean ESUTIL_API esCreateWindow ( ESContext *esContext, const char* title, G
        EGL_NONE
    };
 #else
+   // This may not be necessary at all, but it matches the hello_triangle example.
    EGLint attribList[] =
    {
       EGL_RED_SIZE, 8,
