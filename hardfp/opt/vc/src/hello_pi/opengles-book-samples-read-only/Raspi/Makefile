@@ -1,7 +1,12 @@
 # Straight forward Makefile to compile all examples in a row
 
 INCDIR=-I./Common
-LIBS=-lGLESv2 -lEGL -lm -lX11
+LIBS=-lGLESv2 -lEGL -lm -lX11 -lopenmaxil -lbcm_host ../libs/libilclient.a
+
+CFLAGS+=-DRPI_NO_X -DSTANDALONE -D__STDC_CONSTANT_MACROS -D__STDC_LIMIT_MACROS -DTARGET_POSIX -D_LINUX -fPIC -DPIC -D_REENTRANT -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64 -U_FORTIFY_SOURCE -Wall -g -DHAVE_LIBOPENMAX=2 -DOMX -DOMX_SKIP64BIT -ftree-vectorize -pipe -DUSE_EXTERNAL_OMX -DHAVE_LIBBCM_HOST -DUSE_EXTERNAL_LIBBCM_HOST -DUSE_VCHIQ_ARM -Wno-psabi -I$(SDKSTAGE)/opt/vc/include/
+
+INCLUDES+=-I$(SDKSTAGE)/opt/vc/include/ -I./ -I../libs
+
 
 COMMONSRC=./Common/esShader.c    \
           ./Common/esTransform.c \
@@ -37,24 +42,24 @@ clean:
 	find . -name "CH??_*" | xargs rm -f
 
 ./Chapter_2/Hello_Triangle/CH02_HelloTriangle: ${COMMONSRC} ${COMMONHDR} ${CH02SRC}
-	gcc ${COMMONSRC} ${CH02SRC} -o $@ ${INCDIR} ${LIBS}
+	gcc $(CFLAGS) ${COMMONSRC} ${CH02SRC} -o $@ ${INCDIR} ${LIBS}
 ./Chapter_8/Simple_VertexShader/CH08_SimpleVertexShader: ${COMMONSRC} ${COMMONHDR} ${CH08SRC}
-	gcc ${COMMONSRC} ${CH08SRC} -o ./$@ ${INCDIR} ${LIBS}
+	gcc $(CFLAGS) ${COMMONSRC} ${CH08SRC} -o ./$@ ${INCDIR} ${LIBS}
 ./Chapter_9/Simple_Texture2D/CH09_SimpleTexture2D: ${COMMONSRC} ${COMMONHDR} ${CH09SRC1}
-	gcc ${COMMONSRC} ${CH09SRC1} -o ./$@ ${INCDIR} ${LIBS}
+	gcc $(CFLAGS) ${COMMONSRC} ${CH09SRC1} -o ./$@ ${INCDIR} ${LIBS}
 ./Chapter_9/MipMap2D/CH09_MipMap2D: ${COMMONSRC} ${COMMONHDR} ${CH09SRC2}
-	gcc ${COMMONSRC} ${CH09SRC2} -o ./$@ ${INCDIR} ${LIBS}
+	gcc $(CFLAGS) ${COMMONSRC} ${CH09SRC2} -o ./$@ ${INCDIR} ${LIBS}
 ./Chapter_9/Simple_TextureCubemap/CH09_TextureCubemap: ${COMMONSRC} ${COMMONHDR} ${CH09SRC3}
-	gcc ${COMMONSRC} ${CH09SRC3} -o ./$@ ${INCDIR} ${LIBS}
+	gcc $(CFLAGS) ${COMMONSRC} ${CH09SRC3} -o ./$@ ${INCDIR} ${LIBS}
 ./Chapter_9/TextureWrap/CH09_TextureWrap: ${COMMONSRC} ${COMMONHDR} ${CH09SRC4}
-	gcc ${COMMONSRC} ${CH09SRC4} -o ./$@ ${INCDIR} ${LIBS}
+	gcc $(CFLAGS) ${COMMONSRC} ${CH09SRC4} -o ./$@ ${INCDIR} ${LIBS}
 ./Chapter_10/MultiTexture/CH10_MultiTexture: ${COMMONSRC} ${COMMONHDR} ${CH10SRC}
-	gcc ${COMMONSRC} ${CH10SRC} -o ./$@ ${INCDIR} ${LIBS}
+	gcc $(CFLAGS) ${COMMONSRC} ${CH10SRC} -o ./$@ ${INCDIR} ${LIBS}
 ./Chapter_11/Multisample/CH11_Multisample: ${COMMONSRC} ${COMMONHDR} ${CH11SRC}
-	gcc ${COMMONSRC} ${CH11SRC} -o ./$@ ${INCDIR} ${LIBS}
+	gcc $(CFLAGS) ${COMMONSRC} ${CH11SRC} -o ./$@ ${INCDIR} ${LIBS}
 ./Chapter_11/Stencil_Test/CH11_Stencil_Test: ${COMMONSRC} ${COMMONHDR} ${CH11SRC2}
-	gcc ${COMMONSRC} ${CH11SRC2} -o ./$@ ${INCDIR} ${LIBS}
+	gcc $(CFLAGS) ${COMMONSRC} ${CH11SRC2} -o ./$@ ${INCDIR} ${LIBS}
 ./Chapter_13/Noise3D/CH13_Noise3D: ${COMMONSRC} ${COMMONHDR} ${CH13SRC1}
-	gcc ${COMMONSRC} ${CH13SRC1} -o ./$@ ${INCDIR} ${LIBS}
+	gcc $(CFLAGS) ${COMMONSRC} ${CH13SRC1} -o ./$@ ${INCDIR} ${LIBS}
 ./Chapter_13/ParticleSystem/CH13_ParticleSystem: ${COMMONSRC} ${COMMONHDR} ${CH13SRC2}
-	gcc ${COMMONSRC} ${CH13SRC2} -o ./$@ ${INCDIR} ${LIBS}
+	gcc $(CFLAGS) ${COMMONSRC} ${CH13SRC2} -o ./$@ ${INCDIR} ${LIBS}

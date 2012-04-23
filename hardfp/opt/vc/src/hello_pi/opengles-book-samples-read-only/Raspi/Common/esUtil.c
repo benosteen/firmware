@@ -27,12 +27,20 @@
 #include <EGL/egl.h>
 #include "esUtil.h"
 
+#ifndef RPI_NO_X
+#include  "bcm_host.h"
+#else
 #include  <X11/Xlib.h>
 #include  <X11/Xatom.h>
 #include  <X11/Xutil.h>
+#endif
 
+#ifndef RPI_NO_X
 // X11 related local variables
 static Display *x_display = NULL;
+#else
+static EGLNativeDisplayType x_display = NULL;
+#endif
 
 ///
 // CreateEGLContext()
@@ -103,7 +111,72 @@ EGLBoolean CreateEGLContext ( EGLNativeWindowType hWnd, EGLDisplay* eglDisplay,
    return EGL_TRUE;
 } 
 
+#ifdef RPI_NO_X
+///
+//  WinCreate() - RaspberryPi, direct surface (No X, Xlib)
+//
+//      This function initialized the display and window for EGL
+//
+EGLBoolean WinCreate(ESContext *esContext, const char *title) 
+{
+   int32_t success = 0;
+   EGLBoolean result;
+   EGLint num_config;
 
+   static EGL_DISPMANX_WINDOW_T nativewindow;
+
+   DISPMANX_ELEMENT_HANDLE_T dispman_element;
+   DISPMANX_DISPLAY_HANDLE_T dispman_display;
+   DISPMANX_UPDATE_HANDLE_T dispman_update;
+   VC_RECT_T dst_rect;
+   VC_RECT_T src_rect;
+
+   // create an EGL window surface, passing context width/height
+   success = graphics_get_display_size(0 /* LCD */, esContext->width, esContext->height);
+   assert( success >= 0 );
+
+   dst_rect.x = 0;
+   dst_rect.y = 0;
+   dst_rect.width = esContext->screen_width;
+   dst_rect.height = esContext->screen_height;
+      
+   src_rect.x = 0;
+   src_rect.y = 0;
+   src_rect.width = esContext->screen_width << 16;
+   src_rect.height = esContext->screen_height << 16;        
+
+   dispman_display = vc_dispmanx_display_open( 0 /* LCD */);
+   dispman_update = vc_dispmanx_update_start( 0 );
+         
+   dispman_element = vc_dispmanx_element_add ( dispman_update, dispman_display,
+      0/*layer*/, &dst_rect, 0/*src*/,
+      &src_rect, DISPMANX_PROTECTION_NONE, 0 /*alpha*/, 0/*clamp*/, 0/*transform*/);
+      
+   nativewindow.element = dispman_element;
+   nativewindow.width = state->screen_width;
+   nativewindow.height = state->screen_height;
+   vc_dispmanx_update_submit_sync( dispman_update );
+   
+   esContext->hWnd = (EGLNativeWindowType) nativewindow;
+
+	return EGL_TRUE;
+}
+///
+//  userInterrupt()
+//
+//      Reads from X11 event loop and interrupt program if there is a keypress, or
+//      window close action.
+//
+GLboolean userInterrupt(ESContext *esContext)
+{
+	//GLboolean userinterrupt = GL_FALSE;
+    //return userinterrupt;
+    
+    // Ctrl-C for now to stop
+    
+    return GL_FALSE;
+}
+#else
 ///
 //  WinCreate()
 //
@@ -204,7 +277,7 @@ GLboolean userInterrupt(ESContext *esContext)
     }
     return userinterrupt;
 }
-
+#endif
 
 //////////////////////////////////////////////////////////////////
 //
@@ -220,6 +293,9 @@ GLboolean userInterrupt(ESContext *esContext)
 //
 void ESUTIL_API esInitContext ( ESContext *esContext )
 {
+#ifdef RPI_NO_X
+   bcm_host_init();
+#endif
    if ( esContext != NULL )
    {
       memset( esContext, 0, sizeof( ESContext) );
