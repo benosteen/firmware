@@ -60,6 +60,7 @@ EGLBoolean CreateEGLContext ( EGLNativeWindowType hWnd, EGLDisplay* eglDisplay,
    EGLint contextAttribs[] = { EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE, EGL_NONE };
    #else
    EGLint contextAttribs[] = { EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE };
+   EGLBoolean result;
    #endif
    
    
@@ -103,6 +104,14 @@ EGLBoolean CreateEGLContext ( EGLNativeWindowType hWnd, EGLDisplay* eglDisplay,
       return EGL_FALSE;
    }
 
+#ifdef RPI_NO_X
+   result = eglBindAPI(EGL_OPENGL_ES_API);
+   if ( EGL_FALSE == result)
+   {
+      return EGL_FALSE;
+   }
+#endif
+
    // Create a GL context
    context = eglCreateContext(display, config, EGL_NO_CONTEXT, contextAttribs );
    if ( context == EGL_NO_CONTEXT )
@@ -139,10 +148,12 @@ EGLBoolean WinCreate(ESContext *esContext, const char *title)
    DISPMANX_UPDATE_HANDLE_T dispman_update;
    VC_RECT_T dst_rect;
    VC_RECT_T src_rect;
+   
+   uint32_t display_width;
+   uint32_t display_height;
 
-   // create an EGL window surface, passing context width/height to um... 
-   // overwrite the desired window size with the display size
-   success = graphics_get_display_size(0 /* LCD */, &esContext->width, &esContext->height);
+   // create an EGL window surface, passing context width/height
+   success = graphics_get_display_size(0 /* LCD */, &display_width, &display_height);
    if ( success < 0 )
    {
       return EGL_FALSE;
@@ -150,13 +161,13 @@ EGLBoolean WinCreate(ESContext *esContext, const char *title)
 
    dst_rect.x = 0;
    dst_rect.y = 0;
-   dst_rect.width = esContext->width;
-   dst_rect.height = esContext->height;
+   dst_rect.width = display_width;
+   dst_rect.height = display_height;
       
    src_rect.x = 0;
    src_rect.y = 0;
-   src_rect.width = esContext->width << 16;
-   src_rect.height = esContext->height << 16;        
+   src_rect.width = esContext->width;
+   src_rect.height = esContext->height;        
 
    dispman_display = vc_dispmanx_display_open( 0 /* LCD */);
    dispman_update = vc_dispmanx_update_start( 0 );
