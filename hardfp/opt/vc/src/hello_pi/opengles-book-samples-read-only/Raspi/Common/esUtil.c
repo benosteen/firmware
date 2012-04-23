@@ -27,7 +27,7 @@
 #include <EGL/egl.h>
 #include "esUtil.h"
 
-#ifndef RPI_NO_X
+#ifdef RPI_NO_X
 #include  "bcm_host.h"
 #else
 #include  <X11/Xlib.h>
@@ -132,18 +132,21 @@ EGLBoolean WinCreate(ESContext *esContext, const char *title)
    VC_RECT_T src_rect;
 
    // create an EGL window surface, passing context width/height
-   success = graphics_get_display_size(0 /* LCD */, esContext->width, esContext->height);
-   assert( success >= 0 );
+   success = graphics_get_display_size(0 /* LCD */, (uint32_t *) esContext->width, (uint32_t *) esContext->height);
+   if ( success < 0 )
+   {
+      return EGL_FALSE;
+   }   
 
    dst_rect.x = 0;
    dst_rect.y = 0;
-   dst_rect.width = esContext->screen_width;
-   dst_rect.height = esContext->screen_height;
+   dst_rect.width = esContext->width;
+   dst_rect.height = esContext->height;
       
    src_rect.x = 0;
    src_rect.y = 0;
-   src_rect.width = esContext->screen_width << 16;
-   src_rect.height = esContext->screen_height << 16;        
+   src_rect.width = esContext->width << 16;
+   src_rect.height = esContext->height << 16;        
 
    dispman_display = vc_dispmanx_display_open( 0 /* LCD */);
    dispman_update = vc_dispmanx_update_start( 0 );
@@ -153,11 +156,11 @@ EGLBoolean WinCreate(ESContext *esContext, const char *title)
       &src_rect, DISPMANX_PROTECTION_NONE, 0 /*alpha*/, 0/*clamp*/, 0/*transform*/);
       
    nativewindow.element = dispman_element;
-   nativewindow.width = state->screen_width;
-   nativewindow.height = state->screen_height;
+   nativewindow.width = esContext->width;
+   nativewindow.height = esContext->height;
    vc_dispmanx_update_submit_sync( dispman_update );
    
-   esContext->hWnd = (EGLNativeWindowType) nativewindow;
+   esContext->hWnd = (EGLNativeWindowType) &nativewindow;
 
 	return EGL_TRUE;
 }
