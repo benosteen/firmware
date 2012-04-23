@@ -26,3 +26,20 @@ Compiling the examples should be as easy as running "make" in the root
 linux directory.
 
 31st Oct 2011 - Jarkko Vatjus-Anttila <jvatjusanttila@gmail.com>
+
+IMPORTANT FOR RASPBERRY PI:
+
+
+Currently, the raspi-specific OpenGL ES libs and so on are not visible
+to the linker by default. To fix this, on debian:
+
+[...] # nano /etc/ld.so.conf.d/raspi-opengles-lib.conf
+(Add the following:)
+
+/opt/vc/lib
+
+(Ctrl-X and then 'y' to save.)
+
+[...] # ldconfig
+
+And you should be ready to continue.
