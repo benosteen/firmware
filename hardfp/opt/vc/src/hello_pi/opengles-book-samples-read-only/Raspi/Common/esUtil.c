@@ -38,8 +38,6 @@
 #ifndef RPI_NO_X
 // X11 related local variables
 static Display *x_display = NULL;
-#else
-static EGLNativeDisplayType x_display = NULL;
 #endif
 
 ///
@@ -58,14 +56,27 @@ EGLBoolean CreateEGLContext ( EGLNativeWindowType hWnd, EGLDisplay* eglDisplay,
    EGLContext context;
    EGLSurface surface;
    EGLConfig config;
+   #ifndef RPI_NO_X
    EGLint contextAttribs[] = { EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE, EGL_NONE };
-
+   #else
+   EGLint contextAttribs[] = { EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE };
+   #endif
+   
+   
    // Get Display
+   #ifndef RPI_NO_X
    display = eglGetDisplay((EGLNativeDisplayType)x_display);
    if ( display == EGL_NO_DISPLAY )
    {
       return EGL_FALSE;
    }
+   #else
+   display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+   if ( display == EGL_NO_DISPLAY )
+   {
+      return EGL_FALSE;
+   }
+   #endif
 
    // Initialize EGL
    if ( !eglInitialize(display, &majorVersion, &minorVersion) )
@@ -120,8 +131,6 @@ EGLBoolean CreateEGLContext ( EGLNativeWindowType hWnd, EGLDisplay* eglDisplay,
 EGLBoolean WinCreate(ESContext *esContext, const char *title) 
 {
    int32_t success = 0;
-   EGLBoolean result;
-   EGLint num_config;
 
    static EGL_DISPMANX_WINDOW_T nativewindow;
 
@@ -131,8 +140,9 @@ EGLBoolean WinCreate(ESContext *esContext, const char *title)
    VC_RECT_T dst_rect;
    VC_RECT_T src_rect;
 
-   // create an EGL window surface, passing context width/height
-   success = graphics_get_display_size(0 /* LCD */, (uint32_t *) esContext->width, (uint32_t *) esContext->height);
+   // create an EGL window surface, passing context width/height to um... 
+   // overwrite the desired window size with the display size
+   success = graphics_get_display_size(0 /* LCD */, &esContext->width, &esContext->height);
    if ( success < 0 )
    {
       return EGL_FALSE;
@@ -320,6 +330,7 @@ void ESUTIL_API esInitContext ( ESContext *esContext )
 //
 GLboolean ESUTIL_API esCreateWindow ( ESContext *esContext, const char* title, GLint width, GLint height, GLuint flags )
 {
+#ifndef RPI_NO_X
    EGLint attribList[] =
    {
        EGL_RED_SIZE,       5,
@@ -331,6 +342,17 @@ GLboolean ESUTIL_API esCreateWindow ( ESContext *esContext, const char* title, G
        EGL_SAMPLE_BUFFERS, (flags & ES_WINDOW_MULTISAMPLE) ? 1 : 0,
        EGL_NONE
    };
+#else
+   EGLint attribList[] =
+   {
+      EGL_RED_SIZE, 8,
+      EGL_GREEN_SIZE, 8,
+      EGL_BLUE_SIZE, 8,
+      EGL_ALPHA_SIZE, 8,
+      EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
+      EGL_NONE
+   };
+#endif
    
    if ( esContext == NULL )
    {
