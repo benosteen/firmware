@@ -60,7 +60,6 @@ EGLBoolean CreateEGLContext ( EGLNativeWindowType hWnd, EGLDisplay* eglDisplay,
    EGLint contextAttribs[] = { EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE, EGL_NONE };
    #else
    EGLint contextAttribs[] = { EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE };
-   EGLBoolean result;
    #endif
    
    
@@ -104,14 +103,6 @@ EGLBoolean CreateEGLContext ( EGLNativeWindowType hWnd, EGLDisplay* eglDisplay,
       return EGL_FALSE;
    }
 
-#ifdef RPI_NO_X
-   result = eglBindAPI(EGL_OPENGL_ES_API);
-   if ( EGL_FALSE == result)
-   {
-      return EGL_FALSE;
-   }
-#endif
-
    // Create a GL context
    context = eglCreateContext(display, config, EGL_NO_CONTEXT, contextAttribs );
    if ( context == EGL_NO_CONTEXT )
@@ -149,8 +140,8 @@ EGLBoolean WinCreate(ESContext *esContext, const char *title)
    VC_RECT_T dst_rect;
    VC_RECT_T src_rect;
    
-   uint32_t display_width;
-   uint32_t display_height;
+   int display_width = 640;
+   int display_height = 480;
 
    // create an EGL window surface, passing context width/height
    success = graphics_get_display_size(0 /* LCD */, &display_width, &display_height);
@@ -166,8 +157,8 @@ EGLBoolean WinCreate(ESContext *esContext, const char *title)
       
    src_rect.x = 0;
    src_rect.y = 0;
-   src_rect.width = esContext->width;
-   src_rect.height = esContext->height;        
+   src_rect.width = display_width << 16;
+   src_rect.height = display_height << 16;   
 
    dispman_display = vc_dispmanx_display_open( 0 /* LCD */);
    dispman_update = vc_dispmanx_update_start( 0 );
@@ -177,11 +168,11 @@ EGLBoolean WinCreate(ESContext *esContext, const char *title)
       &src_rect, DISPMANX_PROTECTION_NONE, 0 /*alpha*/, 0/*clamp*/, 0/*transform*/);
       
    nativewindow.element = dispman_element;
-   nativewindow.width = esContext->width;
-   nativewindow.height = esContext->height;
+   nativewindow.width = display_width;
+   nativewindow.height = display_height;
    vc_dispmanx_update_submit_sync( dispman_update );
    
-   esContext->hWnd = (EGLNativeWindowType) &nativewindow;
+   esContext->hWnd = &nativewindow;
 
 	return EGL_TRUE;
 }
@@ -341,7 +332,6 @@ void ESUTIL_API esInitContext ( ESContext *esContext )
 //
 GLboolean ESUTIL_API esCreateWindow ( ESContext *esContext, const char* title, GLint width, GLint height, GLuint flags )
 {
-#ifndef RPI_NO_X
    EGLint attribList[] =
    {
        EGL_RED_SIZE,       5,
@@ -353,18 +343,6 @@ GLboolean ESUTIL_API esCreateWindow ( ESContext *esContext, const char* title, G
        EGL_SAMPLE_BUFFERS, (flags & ES_WINDOW_MULTISAMPLE) ? 1 : 0,
        EGL_NONE
    };
-#else
-   // This may not be necessary at all, but it matches the hello_triangle example.
-   EGLint attribList[] =
-   {
-      EGL_RED_SIZE, 8,
-      EGL_GREEN_SIZE, 8,
-      EGL_BLUE_SIZE, 8,
-      EGL_ALPHA_SIZE, 8,
-      EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
-      EGL_NONE
-   };
-#endif
    
    if ( esContext == NULL )
    {
